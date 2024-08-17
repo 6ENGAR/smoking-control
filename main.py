@@ -1,16 +1,16 @@
 import telebot
+import smoke_checker_db
 from config import TG_API
-from smoke_checker_db import cursor, connection
 
 bot = telebot.TeleBot(TG_API, parse_mode="Markdown")
 
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
-    cursor.execute(f"INSERT INTO users(user_tg_id, username) VALUES ('{message.from_user.id}', "
-                   f"'{message.from_user.username}');")
-    connection.commit()
-    bot.send_message(message.chat.id, f'Привет {message.from_user.first_name} @{message.from_user.username}')
+    smoke_checker_db.add_new_user_to_db(message)
+
+    bot.send_message(message.chat.id, f'Привет 👋 Я бот-помощник.\n\nЕсли тебе кажется, что ты много куришь — я тут '
+                                      f'чтобы помочь тебе контролировать это 🚬')
 
 
 if __name__ == '__main__':
