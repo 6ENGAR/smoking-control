@@ -11,19 +11,17 @@ connection = psycopg2.connect(
 )
 
 
-# once new user launch the bot his username and userid will be saved to db
 def add_new_user_to_db(message):
     try:
         with connection.cursor() as cursor:
-            cursor.execute(f"SELECT * FROM users WHERE user_tg_id='{message.from_user.id}';")
+            cursor.execute("SELECT * FROM users WHERE user_tg_id = '%s';", (message.from_user.id,))
             user_exists = cursor.fetchone()
 
             if user_exists:
                 print(f'[x] USER {message.from_user.id} is already in DB. Clicked on /start once again')
-
             else:
-                cursor.execute(f"INSERT INTO users (user_tg_id, username) VALUES ({message.from_user.id}, "
-                               f"'{message.from_user.username}');")
+                cursor.execute("INSERT INTO users (user_tg_id, username) VALUES (%s, %s);",
+                               (message.from_user.id, message.from_user.username))
                 connection.commit()
                 print(f'[+] NEW USER | {message.from_user.id} added to the DB at {datetime.datetime.now()}')
     except Exception as e:
@@ -33,8 +31,26 @@ def add_new_user_to_db(message):
 def create_user_data_row(message):
     try:
         with connection.cursor() as cursor:
-            cursor.execute(f'INSERT INTO user_data (tg_user_id, timer) VALUES ({message.from_user.id}, {0});')
-            connection.commit()
+            current_date = datetime.date.today()
+            query = "SELECT * FROM user_data WHERE tg_user_id = '%s' AND date = %s;"
+            cursor.execute(query, (message.from_user.id, current_date))
+            row_exists = cursor.fetchall()
+
+            if not row_exists:  # empty list means no rows found
+                cursor.execute("INSERT INTO user_data (tg_user_id, date, timer) VALUES (%s, %s, %s);",
+                               (message.from_user.id, current_date, 0))
+                connection.commit()
+                print(f'[+] {current_date} row has been added to db for {message.from_user.id}')
+            else:
+                print(f'[x] Data for {message.from_user.id} is already in DB. Clicked on /start once again')
     except Exception as e:
         print(f'[x] Error creating user-data row — {e} for {message.from_user.id}')
 
+
+def set_timer(timer, user_id):
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("UPDATE user_data SET timer = %s WHERE tg_user_id = %s;", (timer, user_id))
+            connection.commit()
+    except Exception as e:
+        print(f'[x] Error updating timer value — {e}')
