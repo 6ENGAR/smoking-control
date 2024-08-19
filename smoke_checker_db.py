@@ -29,3 +29,12 @@ def add_new_user_to_db(message):
     except Exception as e:
         print(f'[x] Error checking or adding user in DB — {e} for {message.from_user.id}')
 
+
+def create_user_data_row(message):
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(f'INSERT INTO user_data (tg_user_id, timer) VALUES ({message.from_user.id}, {0});')
+            connection.commit()
+    except Exception as e:
+        print(f'[x] Error creating user-data row — {e} for {message.from_user.id}')
+

@@ -10,6 +10,7 @@ def create_callback_functions(bot):
         '120': lambda call: handle_timer(bot, call, 120),
         '180': lambda call: handle_timer(bot, call, 180),
         '300': lambda call: handle_timer(bot, call, 300),
+        'smoked': lambda call: '',
     }
 
 
@@ -30,7 +31,7 @@ def handle_timer(bot, call, timer):
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=msg_for_an_edit.message_id,
                               text=f"Осталось {waiter} минут")
         if waiter == 0:
-            bot.send_message(call.message.chat.id, f"🔉 Время вышло")
+            bot.send_message(call.message.chat.id, f"🔉 Время вышло", reply_markup=check_in_keyboard)
 
 
 # there is no sense in this keyboard. just to test inline one
@@ -51,3 +52,10 @@ two_hours = types.InlineKeyboardButton('🕥 2 часа', callback_data='120')
 three_hours = types.InlineKeyboardButton('🕜 3 часа', callback_data='180')
 five_hours = types.InlineKeyboardButton('🕞 5 часов', callback_data='300')
 timer_setup.add(half_an_hour, one_hour, two_hours, three_hours, five_hours)
+
+
+# keyboard which allows to check-in a smoke
+
+check_in_keyboard = types.InlineKeyboardMarkup()
+smoked = types.InlineKeyboardButton('✅ Покурил', callback_data='smoked')
+check_in_keyboard.add(smoked)
