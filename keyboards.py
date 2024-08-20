@@ -12,7 +12,7 @@ def create_callback_functions(bot):
         '120': lambda call: handle_timer(bot, call, 120),
         '180': lambda call: handle_timer(bot, call, 180),
         '300': lambda call: handle_timer(bot, call, 300),
-        'smoked': lambda call: '',
+        'smoked': lambda call: handle_smoke_check_in(call),
     }
 
 
@@ -28,7 +28,6 @@ def handle_timer(bot, call, timer):
     smoke_checker_db.set_timer(int(timer), str(call.from_user.id))
     bot.send_message(call.message.chat.id, f"⏳ Твой таймер установлен на {timer} минут. Следи за временем 👇")
 
-    # Запускаем таймер в отдельном потоке
     threading.Thread(target=start_timer, args=(bot, call.message.chat.id, timer)).start()
 
 
@@ -37,13 +36,15 @@ def start_timer(bot, chat_id, timer):
     msg_for_an_edit = bot.send_message(chat_id, f"Осталось 👉 {waiter} 👈 минут")
     while waiter > 0:
         waiter -= 1
-        time.sleep(60)  # Ждем 60 секунд
+        time.sleep(60)
         bot.edit_message_text(chat_id=chat_id, message_id=msg_for_an_edit.message_id,
-                              text=f"Осталось {waiter} минут")
+                              text=f"Осталось 👉 {waiter} 👈 минут")
     bot.send_message(chat_id, "🔉 Время вышло", reply_markup=check_in_keyboard)
 
 
-# Клавиатуры
+def handle_smoke_check_in(call):
+    smoke_checker_db.increase_counter(call.from_user.id)
+
 
 smokes_per_day_intro = types.InlineKeyboardMarkup()
 first_option = types.InlineKeyboardButton('🚬 0-10', callback_data='initial')

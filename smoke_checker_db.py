@@ -36,7 +36,7 @@ def create_user_data_row(message):
             cursor.execute(query, (message.from_user.id, current_date))
             row_exists = cursor.fetchall()
 
-            if not row_exists:  # empty list means no rows found
+            if not row_exists:
                 cursor.execute("INSERT INTO user_data (tg_user_id, date, timer) VALUES (%s, %s, %s);",
                                (message.from_user.id, current_date, 0))
                 connection.commit()
@@ -54,3 +54,14 @@ def set_timer(timer, user_id):
             connection.commit()
     except Exception as e:
         print(f'[x] Error updating timer value — {e}')
+
+
+def increase_counter(user_id):
+    try:
+        current_date = datetime.date.today()
+        with connection.cursor() as cursor:
+            cursor.execute("UPDATE user_data SET counter = counter + 1 WHERE date = %s AND tg_user_id = '%s';",
+                           (current_date, user_id))
+            connection.commit()
+    except Exception as e:
+        print(f'[x] Error updating counter — {e}')

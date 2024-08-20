@@ -25,7 +25,6 @@ def send_welcome(message):
 def callback_inline(call):
     if call.data in callback_functions:
         callback_functions[call.data](call)
-    # bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
 
 
 if __name__ == '__main__':
