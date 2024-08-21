@@ -28,4 +28,5 @@ def callback_inline(call):
 
 
 if __name__ == '__main__':
+    print(smoke_checker_db.get_timer_value('251761718'))
     bot.infinity_polling()

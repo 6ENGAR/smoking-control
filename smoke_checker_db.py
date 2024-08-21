@@ -52,6 +52,7 @@ def set_timer(timer, user_id):
         with connection.cursor() as cursor:
             cursor.execute("UPDATE user_data SET timer = %s WHERE tg_user_id = %s;", (timer, user_id))
             connection.commit()
+            print(f'[+] Timer for {user_id} has been set')
     except Exception as e:
         print(f'[x] Error updating timer value — {e}')
 
@@ -63,5 +64,16 @@ def increase_counter(user_id):
             cursor.execute("UPDATE user_data SET counter = counter + 1 WHERE date = %s AND tg_user_id = '%s';",
                            (current_date, user_id))
             connection.commit()
+            print(f'[+] Daily cigarettes counter for {user_id} has been updated')
     except Exception as e:
         print(f'[x] Error updating counter — {e}')
+
+
+def get_timer_value(user_id):
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT timer FROM user_data WHERE tg_user_id = %s", (str(user_id),))
+            timer = cursor.fetchone()
+            return int(timer[0])
+    except Exception as e:
+        print(f'[x] Error getting timer value counter — {e}')

@@ -12,7 +12,7 @@ def create_callback_functions(bot):
         '120': lambda call: handle_timer(bot, call, 120),
         '180': lambda call: handle_timer(bot, call, 180),
         '300': lambda call: handle_timer(bot, call, 300),
-        'smoked': lambda call: handle_smoke_check_in(call),
+        'smoked': lambda call: handle_smoke_check_in(bot, call),
     }
 
 
@@ -42,8 +42,11 @@ def start_timer(bot, chat_id, timer):
     bot.send_message(chat_id, "🔉 Время вышло", reply_markup=check_in_keyboard)
 
 
-def handle_smoke_check_in(call):
+def handle_smoke_check_in(bot, call):
+    bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
     smoke_checker_db.increase_counter(call.from_user.id)
+    start_timer(bot, call.message.chat.id, smoke_checker_db.get_timer_value(call.from_user.id))
+
 
 
 smokes_per_day_intro = types.InlineKeyboardMarkup()
