@@ -1,5 +1,6 @@
 import threading
 import time
+import datetime
 import smoke_checker_db
 from telebot import types
 
@@ -7,7 +8,7 @@ from telebot import types
 def create_callback_functions(bot):
     return {
         'initial': lambda call: handle_initial(bot, call),
-        '30': lambda call: handle_timer(bot, call, 30),
+        '30': lambda call: handle_timer(bot, call, 1),
         '60': lambda call: handle_timer(bot, call, 60),
         '120': lambda call: handle_timer(bot, call, 120),
         '180': lambda call: handle_timer(bot, call, 180),
@@ -26,7 +27,9 @@ def handle_initial(bot, call):
 def handle_timer(bot, call, timer):
     bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
     smoke_checker_db.set_timer(int(timer), str(call.from_user.id))
-    bot.send_message(call.message.chat.id, f"⏳ Твой таймер установлен на {timer} минут. Следи за временем 👇")
+    bot.send_message(call.message.chat.id, f"⏳ Твой таймер установлен на {timer} минут. Следи за временем 👇\n\n"
+                                           f"_Если ты покурил раньше таймера, можешь воспользоваться кнопкой из меню_",
+                     parse_mode='Markdown')
 
     threading.Thread(target=start_timer, args=(bot, call.message.chat.id, timer)).start()
 
@@ -48,6 +51,19 @@ def handle_smoke_check_in(bot, call):
     start_timer(bot, call.message.chat.id, smoke_checker_db.get_timer_value(call.from_user.id))
 
 
+def compile_report(bot, chat_id):
+    counter = smoke_checker_db.get_counter_value(chat_id)
+    bot.send_message(chat_id, f"🔉 Ты выкурил {counter} сигарет сегодня")
+
+
+def check_time_and_send_report(bot, chat_id):
+    while True:
+        time_controller = datetime.datetime.now()
+        if time_controller.hour == 14 and 18 <= time_controller.minute < 20:
+            compile_report(bot, chat_id)
+            time.sleep(60)
+        time.sleep(20)
+
 
 smokes_per_day_intro = types.InlineKeyboardMarkup()
 first_option = types.InlineKeyboardButton('🚬 0-10', callback_data='initial')
@@ -66,3 +82,10 @@ timer_setup.add(half_an_hour, one_hour, two_hours, three_hours, five_hours)
 check_in_keyboard = types.InlineKeyboardMarkup()
 smoked = types.InlineKeyboardButton('✅ Покурил', callback_data='smoked')
 check_in_keyboard.add(smoked)
+
+main_keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
+smoked = types.KeyboardButton('😮‍💨Покурил')
+report = types.KeyboardButton('📈 Отключить отчёт')
+set_new_timer = types.KeyboardButton('⏰ Установить таймер')
+main_keyboard.add(smoked, report, set_new_timer)
+

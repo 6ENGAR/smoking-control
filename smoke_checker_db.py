@@ -10,6 +10,7 @@ connection = psycopg2.connect(
     port="5432"
 )
 
+current_date = datetime.date.today()
 
 def add_new_user_to_db(message):
     try:
@@ -31,7 +32,7 @@ def add_new_user_to_db(message):
 def create_user_data_row(message):
     try:
         with connection.cursor() as cursor:
-            current_date = datetime.date.today()
+
             query = "SELECT * FROM user_data WHERE tg_user_id = '%s' AND date = %s;"
             cursor.execute(query, (message.from_user.id, current_date))
             row_exists = cursor.fetchall()
@@ -59,7 +60,6 @@ def set_timer(timer, user_id):
 
 def increase_counter(user_id):
     try:
-        current_date = datetime.date.today()
         with connection.cursor() as cursor:
             cursor.execute("UPDATE user_data SET counter = counter + 1 WHERE date = %s AND tg_user_id = '%s';",
                            (current_date, user_id))
@@ -77,3 +77,13 @@ def get_timer_value(user_id):
             return int(timer[0])
     except Exception as e:
         print(f'[x] Error getting timer value counter — {e}')
+
+
+def get_counter_value(user_id):
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT counter FROM user_data WHERE tg_user_id = %s AND date = %s;", (user_id, current_date))
+            cigarettes_counter = cursor.fetchone()
+            return int(cigarettes_counter[0])
+    except Exception as e:
+        print(f'[x] Error getting counter value counter — {e}')
